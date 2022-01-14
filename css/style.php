@@ -378,7 +378,7 @@ p,li{
     vertical-align: bottom;
     border: none;
     border-bottom: 1px solid #dee2e6 !important;
-    padding: 5px !important;
+
 }
 .table td, .table th {
     font-size: 14px;
@@ -388,7 +388,7 @@ p,li{
 }
 
 tbody{
-    vertical-align: top !important;
+    vertical-align: top;
 }
 
 /********/
@@ -717,48 +717,6 @@ h14{
     border-right: 0.625rem solid #f9f9f9 !important;
     
     background-color: #ffffff !important;
-}
-
-/*ENCONTRAR OUTRA FORMA DE TRAVAR PRIMEIRA COLUNA*/
-
-/*TRAVA PRIMEIRA COLUNA DAS TABELAS*/
-th:first-child, td:first-child
-{
-  position:sticky;
-  left:0px;
-
-}
-
-
-/*TAMANHO MODAL*/
-.modal-dialog {
-
-   min-width: 70%;
-}
-
-/*when navigating through the items using the arrow keys:*/
-.autocomplete-active {
-  background-color: #3185c1 !important; 
-  color: #ffffff; 
-}
-
-.modal-open {
-    overflow: hidden;
-}
-
-/*CARIMBO*/
-
-h99{
-    font-family: Andale Mono, monospace;
-    display: inline-block;
-    color: black;
-    font-size: 12px;
-    line-height: 10px;
-    text-transform: uppercase;
-    text-align: center;
-    transform: rotate(-5deg);
-    letter-spacing: -1px;
-    font-weight: bold;
 }
 
 </style>

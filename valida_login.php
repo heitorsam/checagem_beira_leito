@@ -18,15 +18,10 @@
 		
 		echo $usuario;	echo '</br>'; echo $senha; echo '</br>';
 		
-		$result_usuario = oci_parse($conn_ora, "SELECT assinaturas.VALIDA_SENHA_FUNC_ASSINATURAS(:usuario,:senha) AS RESP_LOGIN,
+		$result_usuario = oci_parse($conn_ora, "SELECT checkbeiraleito.VALIDA_SENHA_FUNC_CHECK_BEIRA(:usuario,:senha) AS RESP_LOGIN,
 												(SELECT INITCAP(usu.NM_USUARIO)
 													FROM dbasgu.USUARIOS usu
-													WHERE usu.CD_USUARIO = :usuario) AS NM_USUARIO,													CASE
-														WHEN :usuario IN (SELECT DISTINCT puia.CD_USUARIO
-																			FROM dbasgu.PAPEL_USUARIOS puia
-																			WHERE puia.CD_PAPEL = 347) THEN 'S' --PORTAL ASSINATURAS
-														ELSE 'N'
-													END SN_USUARIO_COMUM
+													WHERE usu.CD_USUARIO = :usuario) AS NM_USUARIO												
 												FROM DUAL");																															
 												
 		oci_bind_by_name($result_usuario, ':usuario', $usuario);

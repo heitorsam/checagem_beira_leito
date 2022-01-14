@@ -33,9 +33,12 @@ GRANT SELECT ON dbamv.TIP_PRESTA TO checkbeiraleito;
 GRANT SELECT ON dbamv.TISS_GUIA TO checkbeiraleito;
 GRANT SELECT ON dbamv.TISS_ITGUIA TO checkbeiraleito;
 GRANT SELECT ON dbamv.CONVENIO TO checkbeiraleito;
+GRANT SELECT ON dbamv.HORARIO_MEDICACAO TO checkbeiraleito;
 
 GRANT INSERT ON dbamv.PRESTADOR_ASSINATURA TO checkbeiraleito;
 GRANT UPDATE ON dbamv.PRESTADOR_ASSINATURA TO checkbeiraleito;
 GRANT DELETE ON dbamv.PRESTADOR_ASSINATURA TO checkbeiraleito;
+
+
 
 GRANT EXECUTE ON PKG_TISS_UTIL TO checkbeiraleito;
