@@ -1,0 +1,23 @@
+CREATE USER painelexames IDENTIFIED BY tbpkrag#2021;
+
+GRANT CONNECT, RESOURCE, DBA TO painelexames;
+
+GRANT CONNECT TO painelexames;
+
+grant create table to painelexames;
+
+grant create FUNCTION to painelexames;
+
+grant create session to  painelexames;
+
+--TABELAS VALIDA LOGIN
+GRANT SELECT ON dbasgu.USUARIOS TO painelexames;
+GRANT SELECT ON dbasgu.PAPEL_USUARIOS TO painelexames;
+
+--FUNCAO LOGIN
+GRANT EXECUTE ON FNC_MV2000_HMVPEP TO painelexames;
+
+GRANT UNLIMITED TABLESPACE TO painelexames;
+
+GRANT SELECT ON dbamv.PED_LAB TO painelexames;
+
