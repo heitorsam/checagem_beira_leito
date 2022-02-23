@@ -3,7 +3,7 @@
     include "cabecalho.php";
 
     $id_paciente = 1;
-    $id_procedimento = 1000000;
+    $id_detalhado = 1000000;
 
     if(isset($_POST['frm_setor'])){
 
@@ -15,7 +15,7 @@
 
     }    
 
-    echo 'SETOR SELECIONADO = ' . $var_frm_setor . '</br></br>';
+    //echo 'SETOR SELECIONADO = ' . $var_frm_setor . '</br></br>';
 
     /////////
     //SETOR//
@@ -49,7 +49,6 @@
 <h27> <a href="home.php" style="color: #444444; text-decoration: none;"> <i class="fa fa-reply" aria-hidden="true"></i> Voltar </a> </h27> 
 
 <div class="div_br"> </div>
-
 
 <!--------------------->
 <!--DETALHE PENDECIAS-->
@@ -96,21 +95,61 @@
     //TOTAL//
     /////////
 
-    $consulta_tot = "SELECT SUM(TOTAL) AS TOTAL
-    FROM (SELECT pac.APA_CORPO,
-                 pac.APA_CMP,
-                 pac.APA_NUM,
-                 pac.DS_PROCEDIMENTO,
-                 SUM(pac.PAP_QTDPROD) AS QTD,
-                 SUM(pac.VL_SERVICO_AMBULATORIAL) AS SOMA,
-                 SUM(pac.PAP_QTDPROD) * SUM(pac.VL_SERVICO_AMBULATORIAL) AS TOTAL
-            FROM apac.APAC_CONS_GERAL pac
-            WHERE pac.APA_CMP = '$var_ano_mes'
-           GROUP BY pac.APA_CORPO,
-                    pac.APA_CMP,
-                    pac.APA_NUM,
-                    pac.APA_NOMEPCNTE,
-                    pac.DS_PROCEDIMENTO) res";
+    $consulta_tot = "SELECT lt_set.CD_SETOR, lt_set.NM_SETOR,
+                    COUNT(hm.CD_ATENDIMENTO) AS QTD
+                    FROM dbamv.PRE_MED pm
+                    INNER JOIN dbamv.ITPRE_MED itpm
+                      ON itpm.CD_PRE_MED = pm.CD_PRE_MED
+                    INNER JOIN dbamv.TIP_FRE tf
+                      ON tf.CD_TIP_FRE = itpm.CD_TIP_FRE
+                    INNER JOIN dbamv.TIP_ESQ esq
+                      ON esq.CD_TIP_ESQ = itpm.CD_TIP_ESQ
+                    INNER JOIN dbamv.PRESTADOR prest
+                      ON prest.CD_PRESTADOR = pm.CD_PRESTADOR
+                    INNER JOIN dbamv.HRITPRE_MED hm
+                      ON hm.CD_ITPRE_MED = itpm.CD_ITPRE_MED
+                    INNER JOIN dbamv.ATENDIME atd
+                      ON atd.CD_ATENDIMENTO = pm.CD_ATENDIMENTO
+                      AND NVL(TO_CHAR(atd.DT_ALTA,'DD/MM/YYYY'),'999999999999') <> TO_CHAR(pm.DT_PRE_MED,'DD/MM/YYYY')
+                      AND NVL(TO_CHAR(atd.DT_ALTA,'DD/MM/YYYY'),'999999999999') <> TO_CHAR(pm.DT_PRE_MED+1,'DD/MM/YYYY')
+                      AND NVL(TO_CHAR(atd.DT_ALTA,'DD/MM/YYYY'),'999999999999') <> TO_CHAR(hm.DH_MEDICACAO,'DD/MM/YYYY')
+                      AND NVL(TO_CHAR(atd.DT_ALTA,'DD/MM/YYYY'),'999999999999') <> TO_CHAR(hm.DH_MEDICACAO+1,'DD/MM/YYYY')
+                    INNER JOIN (SELECT mi.CD_ATENDIMENTO, mi.CD_LEITO,
+                                mi.CD_LEITO_ANTERIOR, lt.DS_LEITO,
+                                st.CD_SETOR, st.NM_SETOR,
+                                mi.HR_MOV_INT AS DT_ENTRADA,
+                                NVL((SELECT MIN(HR_MOV_INT) -1/(24*60*60)
+                                    FROM MOV_INT
+                                    WHERE CD_ATENDIMENTO = mi.CD_ATENDIMENTO
+                                    AND CD_LEITO_ANTERIOR = mi.CD_LEITO
+                                    AND HR_MOV_INT >= mi.HR_MOV_INT), SYSDATE) AS DT_SAIDA
+                                FROM MOV_INT mi
+                                INNER JOIN dbamv.LEITO lt
+                                ON lt.CD_LEITO = mi.CD_LEITO
+                                INNER JOIN dbamv.UNID_INT unid
+                                ON unid.CD_UNID_INT = lt.CD_UNID_INT
+                                INNER JOIN dbamv.SETOR st
+                                ON st.CD_SETOR = unid.CD_SETOR
+                                WHERE mi.CD_ATENDIMENTO IS NOT NULL
+                                AND st.CD_SETOR = $var_frm_setor) lt_set
+                    ON lt_set.CD_ATENDIMENTO = atd.CD_ATENDIMENTO
+                    AND hm.DH_MEDICACAO BETWEEN lt_set.DT_ENTRADA AND lt_set.DT_SAIDA
+                    WHERE prest.CD_TIP_PRESTA IN (4,8,9)
+                    AND itpm.CD_TIP_ESQ IN ('GAS','ANT','CUR','DEP','DET','FOR','HEM','HID','MAR','MCD','MDP','MED','MNP','MOD','MUC','PE2','PRE','PRO','QT','SOR','SSR','SUP')
+                    AND pm.HR_PRE_MED >= SYSDATE -2
+                    AND hm.DH_MEDICACAO >= SYSDATE-1
+                    AND itpm.CD_ITPRE_MED || '-' || TO_CHAR(hm.DH_MEDICACAO,'DD/MM/YYYY HH24:MI:SS')
+                    NOT IN (SELECT hcaux.CD_ITPRE_MED || '-' || TO_CHAR(hcaux.DH_MEDICACAO,'DD/MM/YYYY HH24:MI:SS')
+                            FROM dbamv.HRITPRE_CONS hcaux
+                            WHERE hcaux.DH_MEDICACAO >= SYSDATE-1)
+                            --AND hcaux.SN_SUSPENSO <> 'S')
+                    AND itpm.CD_ITPRE_MED || '-' || TO_CHAR(hm.DH_MEDICACAO,'DD/MM/YYYY HH24:MI:SS')
+                    NOT IN (SELECT csmdaux.CD_ITPRE_MED || '-' || TO_CHAR(csmdaux.DH_MEDICACAO,'DD/MM/YYYY HH24:MI:SS')
+                            FROM dbamv.HORA_COMPONT_IT_PRESCRIC_CSMD csmdaux
+                            WHERE csmdaux.DH_MEDICACAO >= SYSDATE-1)
+                    AND itpm.DH_CANCELADO IS NULL
+                GROUP BY
+                    lt_set.CD_SETOR, lt_set.NM_SETOR";
 
     $result_tot  = oci_parse($conn_ora, $consulta_tot);
 
@@ -124,36 +163,79 @@
             class="col-11" style="padding: 8px; border-radius: 3px; margin-top: 10px;
             color: #ffffff; background-color: #417ffa !important;">';
                                                         
-            echo '<b>' . 'TOTAL - R$' . @number_format($row_tot['TOTAL'] , 2, ',', '.') . '</b>';
+            echo '<b>' . 'TOTAL PENDÊNCIAS: ';
+            if(isset($row_tot['QTD'])) {
+                echo $row_tot['QTD'];
+            }else{
+                echo '0';
+            }            
+            
+            echo '</b>';
 
         echo '</div>';  
                     
     echo '</div>';  
 
-
-
     ////////////
     //PACIENTE//
     ////////////
 
-    $consulta_pac = "SELECT res.APA_CORPO, res.APA_CMP, res.APA_NUM, res.APA_NOMEPCNTE,res.APA_NPRONT,
-                        SUM(TOTAL) AS TOTAL
-                        FROM(
-                        SELECT pac.APA_CORPO,
-                            pac.APA_CMP,
-                            pac.APA_NUM,
-                            pac.APA_NPRONT,
-                            pac.APA_NOMEPCNTE,
-                            pac.DS_PROCEDIMENTO,
-                            SUM(pac.PAP_QTDPROD) AS QTD,
-                            SUM(pac.VL_SERVICO_AMBULATORIAL) AS SOMA,
-                            SUM(pac.PAP_QTDPROD) * SUM(pac.VL_SERVICO_AMBULATORIAL) AS TOTAL
-                        FROM apac.APAC_CONS_GERAL pac
-                        WHERE pac.APA_CMP = '$var_ano_mes'
-                        GROUP BY pac.APA_CORPO, pac.APA_CMP, pac.APA_NUM,pac.APA_NPRONT, pac.APA_NOMEPCNTE, pac.DS_PROCEDIMENTO
-                        ) res
-                        GROUP BY res.APA_CORPO, res.APA_CMP, res.APA_NUM, res.APA_NOMEPCNTE,res.APA_NPRONT
-                        ORDER BY res.APA_NOMEPCNTE";
+    $consulta_pac = "SELECT atd.CD_ATENDIMENTO, lt_set.DS_LEITO, atd.CD_PACIENTE, pac.NM_PACIENTE, pac.DT_NASCIMENTO, pac.NM_MAE,
+                            COUNT(hm.DH_MEDICACAO) AS QTD_PENDENCIA
+                            FROM dbamv.PRE_MED pm
+                            INNER JOIN dbamv.ITPRE_MED itpm
+                                ON itpm.CD_PRE_MED = pm.CD_PRE_MED
+                            INNER JOIN dbamv.TIP_FRE tf
+                                ON tf.CD_TIP_FRE = itpm.CD_TIP_FRE
+                            INNER JOIN dbamv.TIP_ESQ esq
+                                ON esq.CD_TIP_ESQ = itpm.CD_TIP_ESQ
+                            INNER JOIN dbamv.PRESTADOR prest
+                                ON prest.CD_PRESTADOR = pm.CD_PRESTADOR
+                            INNER JOIN dbamv.HRITPRE_MED hm
+                                ON hm.CD_ITPRE_MED = itpm.CD_ITPRE_MED
+                            INNER JOIN dbamv.ATENDIME atd
+                                ON atd.CD_ATENDIMENTO = pm.CD_ATENDIMENTO
+                                AND NVL(TO_CHAR(atd.DT_ALTA,'DD/MM/YYYY'),'999999999999') <> TO_CHAR(pm.DT_PRE_MED,'DD/MM/YYYY')
+                                AND NVL(TO_CHAR(atd.DT_ALTA,'DD/MM/YYYY'),'999999999999') <> TO_CHAR(pm.DT_PRE_MED+1,'DD/MM/YYYY')
+                                AND NVL(TO_CHAR(atd.DT_ALTA,'DD/MM/YYYY'),'999999999999') <> TO_CHAR(hm.DH_MEDICACAO,'DD/MM/YYYY')
+                                AND NVL(TO_CHAR(atd.DT_ALTA,'DD/MM/YYYY'),'999999999999') <> TO_CHAR(hm.DH_MEDICACAO+1,'DD/MM/YYYY')
+                            INNER JOIN dbamv.PACIENTE pac
+                                ON pac.CD_PACIENTE = atd.CD_PACIENTE       
+                            INNER JOIN (SELECT mi.CD_ATENDIMENTO, mi.CD_LEITO,
+                                        mi.CD_LEITO_ANTERIOR, lt.DS_LEITO,
+                                        st.CD_SETOR, st.NM_SETOR,
+                                        mi.HR_MOV_INT AS DT_ENTRADA,
+                                        NVL((SELECT MIN(HR_MOV_INT) -1/(24*60*60)
+                                            FROM MOV_INT
+                                            WHERE CD_ATENDIMENTO = mi.CD_ATENDIMENTO
+                                            AND CD_LEITO_ANTERIOR = mi.CD_LEITO
+                                            AND HR_MOV_INT >= mi.HR_MOV_INT), SYSDATE) AS DT_SAIDA
+                                        FROM MOV_INT mi
+                                        INNER JOIN dbamv.LEITO lt
+                                            ON lt.CD_LEITO = mi.CD_LEITO
+                                        INNER JOIN dbamv.UNID_INT unid
+                                            ON unid.CD_UNID_INT = lt.CD_UNID_INT
+                                        INNER JOIN dbamv.SETOR st
+                                            ON st.CD_SETOR = unid.CD_SETOR
+                                        WHERE mi.CD_ATENDIMENTO IS NOT NULL
+                                        AND st.CD_SETOR = $var_frm_setor) lt_set
+                                ON lt_set.CD_ATENDIMENTO = atd.CD_ATENDIMENTO
+                                AND hm.DH_MEDICACAO BETWEEN lt_set.DT_ENTRADA AND lt_set.DT_SAIDA
+                            WHERE prest.CD_TIP_PRESTA IN (4,8,9)
+                            AND itpm.CD_TIP_ESQ IN ('GAS','ANT','CUR','DEP','DET','FOR','HEM','HID','MAR','MCD','MDP','MED','MNP','MOD','MUC','PE2','PRE','PRO','QT','SOR','SSR','SUP')
+                            AND pm.HR_PRE_MED >= SYSDATE -2
+                            AND hm.DH_MEDICACAO >= SYSDATE-1
+                            AND itpm.CD_ITPRE_MED || '-' || TO_CHAR(hm.DH_MEDICACAO,'DD/MM/YYYY HH24:MI:SS')
+                            NOT IN (SELECT hcaux.CD_ITPRE_MED || '-' || TO_CHAR(hcaux.DH_MEDICACAO,'DD/MM/YYYY HH24:MI:SS')
+                                    FROM dbamv.HRITPRE_CONS hcaux
+                                    WHERE hcaux.DH_MEDICACAO >= SYSDATE-1)
+                                    --AND hcaux.SN_SUSPENSO <> 'S')
+                            AND itpm.CD_ITPRE_MED || '-' || TO_CHAR(hm.DH_MEDICACAO,'DD/MM/YYYY HH24:MI:SS')
+                            NOT IN (SELECT csmdaux.CD_ITPRE_MED || '-' || TO_CHAR(csmdaux.DH_MEDICACAO,'DD/MM/YYYY HH24:MI:SS')
+                                    FROM dbamv.HORA_COMPONT_IT_PRESCRIC_CSMD csmdaux
+                                    WHERE csmdaux.DH_MEDICACAO >= SYSDATE-1)
+                            AND itpm.DH_CANCELADO IS NULL
+                            GROUP BY  atd.CD_ATENDIMENTO, lt_set.DS_LEITO, atd.CD_PACIENTE, pac.NM_PACIENTE, pac.DT_NASCIMENTO, pac.NM_MAE";
 
     $result_pac  = oci_parse($conn_ora, $consulta_pac);
 
@@ -169,201 +251,164 @@
                                                         
  
              echo '<div class="row justify-content-md-center" style="padding: 1px 1em 0 1em; border-radius: 3px !important;">';
-             $var_apac=$row_pac['APA_NUM'];
-                            echo '<div class="col-11" style="background-color: #6996EF !important; padding-top: 3px; padding-bottom: 3px;">';
-                                echo '<b> APAC: ' . $var_apac . ' - PRONTUÁRIO ' . $row_pac['APA_NPRONT'] . ' - '. $row_pac['APA_NOMEPCNTE'] . ' - R$' . @number_format($row_pac['TOTAL'] , 2, ',', '.')  . ' ' . '<button type="button" class="btn btn-primary" style="padding: 0px 6px 0px 6px !important;" data-toggle="modal" data-target="#detalhejust'.$id_procedimento.'">
-                                <i class="fas fa-info-circle"></i></button>'. '</b>';
-                                
-                            echo '</div>';
+                echo '<div class="col-11" style="background-color: #6996EF !important; padding-top: 3px; padding-bottom: 3px;">';
+                    echo '<b>'. $row_pac['CD_ATENDIMENTO'] . ' - ' . $row_pac['DS_LEITO'] . ' - ' . $row_pac['NM_PACIENTE'] . ' - PENDÊNCIAS: ' . $row_pac['QTD_PENDENCIA'] . ' ' .
+                    '<button type="button" class="btn btn-primary" style="padding: 0px 6px 0px 6px !important;" data-toggle="modal" data-target="#detalhejust'.$id_paciente.'">
+                    <i class="fas fa-info-circle"></i></button>'. '</b>';
+                    
+                echo '</div>';
 
-                            echo '<div onclick="mostrar_pac_'. $id_paciente . '()" class="col-1" style="background-color: #6996EF !important; padding-top: 3px; padding-bottom: 3px;">';
-                                echo '<b> <i id="pac_bot_'.$id_paciente.'" class="fas fa-chevron-down"></i> </b>';           
-                            echo '</div>';
+                echo '<div onclick="mostrar_pac_'. $id_paciente . '()" class="col-1" style="background-color: #6996EF !important; padding-top: 3px; padding-bottom: 3px;">';
+                    echo '<b> <i id="pac_bot_'.$id_paciente.'" class="fas fa-chevron-down"></i> </b>';           
+                echo '</div>';
 
             echo '</div>';
 
-        echo '</div>';  
-        
+        echo '</div>';          
 
-            ///////////
-            // MODAL //
-            ///////////
-                 include 'modal_info_pac.php';
+        ///////////
+        // MODAL //
+        ///////////
+        include 'modal_info_pac.php';
+
             /////////////
-            //DIALITICO//
+            //DETALHADO//
             /////////////
 
-            $consulta_dia = "SELECT res.APA_VARIA, res.APA_CIDPRI, res.DS_CID,
-            SUM(TOTAL) AS TOTAL
-            FROM(
-                SELECT vg.APA_VARIA, vg.APA_CIDPRI, vg.DS_CID, vg.DS_PROCEDIMENTO,
-                    SUM(vg.PAP_QTDPROD) AS QTD,
-                    SUM(vg.VL_SERVICO_AMBULATORIAL) AS SOMA,
-                    SUM(vg.PAP_QTDPROD) * SUM(vg.VL_SERVICO_AMBULATORIAL) AS TOTAL
-                    FROM apac.APAC_CONS_GERAL vg
-                   WHERE vg.APA_CMP = '$var_ano_mes'
-                     AND vg.APA_CORPO = '". $row_pac['APA_CORPO'] . "' ".
-                    "AND vg.APA_CMP = '". $row_pac['APA_CMP'] . "' ".
-                    "AND vg.APA_NUM = '". $row_pac['APA_NUM'] . "' 
-                GROUP BY vg.APA_VARIA, vg.APA_CIDPRI, vg.DS_CID, vg.DS_PROCEDIMENTO
-            ) res
-            GROUP BY res.APA_VARIA, res.APA_CIDPRI, res.DS_CID";
+            $consulta_detalhado = "SELECT TO_CHAR(hm.DH_MEDICACAO, 'YYYY_MM_DD') AS ORD_PERIODO,
+            TO_CHAR(hm.DH_MEDICACAO, 'DD/MM/YYYY') AS PERIODO,
+            lt_set.CD_SETOR, lt_set.NM_SETOR,
+            pm.CD_PRE_MED, pm.CD_ATENDIMENTO,
+            pm.HR_PRE_MED, TO_CHAR(hm.DH_MEDICACAO,'DD/MM/YYYY HH24:MI') AS DH_MEDICACAO,
+            itpm.CD_ITPRE_MED,
+            esq.CD_TIP_ESQ, esq.DS_TIP_ESQ,
+            tf.DS_TIP_FRE, tp.DS_TIP_PRESC
+            FROM dbamv.PRE_MED pm
+            INNER JOIN dbamv.ITPRE_MED itpm
+              ON itpm.CD_PRE_MED = pm.CD_PRE_MED
+            INNER JOIN dbamv.TIP_FRE tf
+              ON tf.CD_TIP_FRE = itpm.CD_TIP_FRE
+            INNER JOIN dbamv.TIP_ESQ esq
+              ON esq.CD_TIP_ESQ = itpm.CD_TIP_ESQ
+            INNER JOIN dbamv.PRESTADOR prest
+              ON prest.CD_PRESTADOR = pm.CD_PRESTADOR
+            INNER JOIN dbamv.HRITPRE_MED hm
+              ON hm.CD_ITPRE_MED = itpm.CD_ITPRE_MED
+            INNER JOIN dbamv.ATENDIME atd
+                ON atd.CD_ATENDIMENTO = pm.CD_ATENDIMENTO
+                AND NVL(TO_CHAR(atd.DT_ALTA,'DD/MM/YYYY'),'999999999999') <> TO_CHAR(pm.DT_PRE_MED,'DD/MM/YYYY')
+                AND NVL(TO_CHAR(atd.DT_ALTA,'DD/MM/YYYY'),'999999999999') <> TO_CHAR(pm.DT_PRE_MED+1,'DD/MM/YYYY')
+                AND NVL(TO_CHAR(atd.DT_ALTA,'DD/MM/YYYY'),'999999999999') <> TO_CHAR(hm.DH_MEDICACAO,'DD/MM/YYYY')
+                AND NVL(TO_CHAR(atd.DT_ALTA,'DD/MM/YYYY'),'999999999999') <> TO_CHAR(hm.DH_MEDICACAO+1,'DD/MM/YYYY')
+            LEFT JOIN dbamv.TIP_PRESC tp
+              ON tp.CD_TIP_PRESC = itpm.CD_TIP_PRESC
+            INNER JOIN (SELECT mi.CD_ATENDIMENTO, mi.CD_LEITO,
+                        mi.CD_LEITO_ANTERIOR, lt.DS_LEITO,
+                        st.CD_SETOR, st.NM_SETOR,
+                        mi.HR_MOV_INT AS DT_ENTRADA,
+                        NVL((SELECT MIN(HR_MOV_INT) -1/(24*60*60)
+                             FROM MOV_INT
+                             WHERE CD_ATENDIMENTO = mi.CD_ATENDIMENTO
+                             AND CD_LEITO_ANTERIOR = mi.CD_LEITO
+                             AND HR_MOV_INT >= mi.HR_MOV_INT), SYSDATE) AS DT_SAIDA
+                        FROM MOV_INT mi
+                        INNER JOIN dbamv.LEITO lt
+                          ON lt.CD_LEITO = mi.CD_LEITO
+                        INNER JOIN dbamv.UNID_INT unid
+                          ON unid.CD_UNID_INT = lt.CD_UNID_INT
+                        INNER JOIN dbamv.SETOR st
+                          ON st.CD_SETOR = unid.CD_SETOR
+                        WHERE mi.CD_ATENDIMENTO IS NOT NULL
+                        AND st.CD_SETOR = $var_frm_setor) lt_set
+              ON lt_set.CD_ATENDIMENTO = atd.CD_ATENDIMENTO
+              AND hm.DH_MEDICACAO BETWEEN lt_set.DT_ENTRADA AND lt_set.DT_SAIDA
+            WHERE prest.CD_TIP_PRESTA IN (4,8,9)
+            AND itpm.CD_TIP_ESQ IN ('GAS','ANT','CUR','DEP','DET','FOR','HEM','HID','MAR','MCD','MDP','MED','MNP','MOD','MUC','PE2','PRE','PRO','QT','SOR','SSR','SUP')
+            AND pm.HR_PRE_MED >= SYSDATE -2
+            AND hm.DH_MEDICACAO >= SYSDATE-1
+            AND itpm.CD_ITPRE_MED || '-' || TO_CHAR(hm.DH_MEDICACAO,'DD/MM/YYYY HH24:MI:SS')
+                NOT IN (SELECT hcaux.CD_ITPRE_MED || '-' || TO_CHAR(hcaux.DH_MEDICACAO,'DD/MM/YYYY HH24:MI:SS')
+                        FROM dbamv.HRITPRE_CONS hcaux
+                        WHERE hcaux.DH_MEDICACAO >= SYSDATE-1)
+                        --AND hcaux.SN_SUSPENSO <> 'S')
+            AND itpm.CD_ITPRE_MED || '-' || TO_CHAR(hm.DH_MEDICACAO,'DD/MM/YYYY HH24:MI:SS')
+                NOT IN (SELECT csmdaux.CD_ITPRE_MED || '-' || TO_CHAR(csmdaux.DH_MEDICACAO,'DD/MM/YYYY HH24:MI:SS')
+                            FROM dbamv.HORA_COMPONT_IT_PRESCRIC_CSMD csmdaux
+                            WHERE csmdaux.DH_MEDICACAO >= SYSDATE-1)
+            AND atd.CD_PACIENTE = ". $row_pac['CD_PACIENTE'] . "
+            AND itpm.DH_CANCELADO IS NULL
+            ORDER BY hm.DH_MEDICACAO ASC";
 
-            $result_dia  = oci_parse($conn_ora, $consulta_dia);
+            $result_detalhado  = oci_parse($conn_ora, $consulta_detalhado);
         
-            @oci_execute($result_dia); 
+            @oci_execute($result_detalhado); 
+
+
+            echo '<div id="detalhe_' . $id_detalhado . '"                      
+                class="col-11" style=" margin: 0 auto; border-radius: 3px; margin-top: 22px;
+                border: solid 1px #6996EF;">';
+
+                    echo "<div class='table-responsive col-md-12'>
+                          <table class='table table-striped' cellspacing='0' cellpadding='0'>" . "<thead><tr>"; 
+                            
+                            echo "<th class='align-middle' style='text-align: center;'> Prescrição</th>
+                                  <th class='align-middle' style='text-align: center;'> Esquema</th>	
+                                  <th class='align-middle' style='text-align: center;'> Descrição</th>	
+                                  <th class='align-middle' style='text-align: center;'> Horário Medicação</th>";	
         
-                while($row_dia = oci_fetch_array($result_dia)){
-
-                    echo '<div id="pac_' . $id_paciente . '" 
-                        class="col-11" style="padding: 4px; border-radius: 3px; 
-                        margin-top: 10px; margin-bottom: 10px; background-color: #f9f9f9 !important;">';
-   
-                        echo '<div class="row justify-content-md-center" style="padding: 3px 1em 0 1em; border-radius: 3px !important;">';
-                        
-                            echo '<div class="col-11" style="background-color: #d8e5ff !important; padding-top: 3px; padding-bottom: 3px;">';
-                                echo '<b>'. $row_dia['APA_CIDPRI'] .' - '. $row_dia['DS_CID'] . ' - R$' . @number_format($row_pac['TOTAL'] , 2, ',', '.') .'</b>';
-                            echo '</div>';
-
-                            echo '<div onclick="mostrar_proc_'. $id_procedimento . '()" class="col-1" style="background-color: #d8e5ff !important; padding-top: 3px; padding-bottom: 3px;">';
-                                echo '<b> <i id="proc_bot_'.$id_procedimento.'" class="fas fa-chevron-down"></i> </b>';           
-                            echo '</div>';
-
-                        echo '</div>';
-
-
-
-                        ////////////////
-                        //PROCEDIMENTO//
-                        ////////////////
-
-                        $consulta_proc = "SELECT proc.PAC_CORPO_PROC, proc.PAP_CODPROC, proc.DS_PROCEDIMENTO,
-                                        SUM(proc.PAP_QTDPROD) AS QTD,
-                                        SUM(proc.VL_SERVICO_AMBULATORIAL) AS SOMA,
-                                        SUM(proc.PAP_QTDPROD) * SUM(proc.VL_SERVICO_AMBULATORIAL) AS TOTAL
-                                        FROM apac.APAC_CONS_GERAL proc
-                                       WHERE proc.APA_CMP = '$var_ano_mes'
-                                         AND proc.APA_CORPO = '". $row_pac['APA_CORPO'] . "' ".
-                                        "AND proc.APA_CMP = '". $row_pac['APA_CMP'] . "' ".
-                                        "AND proc.APA_NUM = '". $row_pac['APA_NUM'] . "' " .
-                                        "AND proc.APA_VARIA = '". $row_dia['APA_VARIA'] . "' ".
-                                        "AND proc.APA_CIDPRI = '". $row_dia['APA_CIDPRI'] . "' 
-                                        GROUP BY proc.PAC_CORPO_PROC, proc.PAP_CODPROC, proc.DS_PROCEDIMENTO
-                                        ORDER BY proc.DS_PROCEDIMENTO ASC";
-
-                        $result_proc  = oci_parse($conn_ora, $consulta_proc);
+                        echo "</tr></thead>";	     
                     
-                        @oci_execute($result_proc); 
+                            while($row_detalhado = oci_fetch_array($result_detalhado)){
 
+                                        echo "<tr>";
 
-                        echo '<div id="proc_' . $id_procedimento . '"                      
-                            class="col-11" style=" margin: 0 auto; border-radius: 3px; margin-top: 22px;
-                            border: solid 1px #6996EF;">';
+                                            echo "<td style='text-align: center;'>" . $row_detalhado['CD_PRE_MED']. "<br>" . "</td>";
+                                            echo "<td style='text-align: center;'>" . $row_detalhado['DS_TIP_ESQ']. "<br>" . "</td>";
+                                            echo "<td style='text-align: center;'>" . $row_detalhado['DS_TIP_PRESC']. "<br>" . "</td>";
+                                            echo "<td style='text-align: center;'>" . $row_detalhado['DH_MEDICACAO']. "<br>" . "</td>";
+                                        
+                                        echo "</tr>";                               
 
-                            echo "<div class='table-responsive col-md-12'>
-                                <table class='table table-striped' cellspacing='0' cellpadding='0'>" . "<thead><tr>"; 
-                                    
-                                    echo "<th class='align-middle' style='text-align: center;'> Cod. Procedimento</th>
-                                          <th class='align-middle' style='text-align: center;'> Procedimento</th>	
-                                          <th class='align-middle' style='text-align: center;'> Valor</th>		  
-                                          <th class='align-middle' style='text-align: center;'> Quantidade</th>                                          
-                                          <th class='align-middle' style='text-align: center;'> Total</th>";
+                            }
 
-                                    echo "</tr></thead>";	
-                                    	
+            ?>
 
-                                        while($row_proc = oci_fetch_array($result_proc)){
+            <script>
 
-                                            echo "<tr>";
+                var proc<?php echo $id_detalhado;?> = document.getElementById("<?php echo 'detalhe_' . $id_detalhado;?>");
+                var proc_bot_<?php echo $id_detalhado;?> = document.getElementById("<?php echo 'proc_bot_' . $id_detalhado;?>");
 
-                                            $var_codproc =  $row_proc['PAP_CODPROC'];
+                proc<?php echo $id_detalhado; ?>.style.display = 'none';
 
-                                                if (strlen($var_codproc) == 9){
-                                                    echo "<td style='text-align: center;'>0" . $var_codproc . "<br>" . "</td>";
-                                                }else{
-                                                    echo "<td style='text-align: center;'>" . $var_codproc . "<br>" . "</td>";
-                                                }
-                                               
-                                                echo "<td style='text-align: center;'>" . $row_proc['DS_PROCEDIMENTO']. "<br>" . "</td>";
-                                                echo "<td style='text-align: center;'>R$" . $row_proc['SOMA']. "<br>" . "</td>";
-                                                echo "<td style='text-align: center;'>" . $row_proc['QTD'] . "<br>" . "</td>";                                                
-                                                echo "<td style='text-align: center;'>R$" . @number_format($row_proc['TOTAL'] , 2, ',', '.'). "<br>" . "</td>";
-                                            echo "</tr>";
-                                        }
+                function mostrar_pac_<?php echo $id_paciente;?>(){
+                    if(proc<?php echo $id_detalhado;?>.style.display == 'none'){  
 
-                            echo "</table>";
-
-                        echo "</div>";
-
-                    echo '</div>';  
-
-                echo '</div>';
-
-                ?>
-
-                <script>
-
-                var proc<?php echo $id_procedimento;?> = document.getElementById("<?php echo 'proc_' . $id_procedimento;?>");
-                var proc_bot_<?php echo $id_procedimento;?> = document.getElementById("<?php echo 'proc_bot_' . $id_procedimento;?>");
-
-                proc<?php echo $id_procedimento; ?>.style.display = 'none';
-
-
-                function mostrar_proc_<?php echo $id_procedimento;?>(){
-                    if(proc<?php echo $id_procedimento;?>.style.display == 'none'){    
-                        proc<?php echo $id_procedimento;?>.style.display = 'block';
-
-                        proc_bot_<?php echo $id_procedimento;?>.classList.remove('fas','fa-chevron-down');
-                        proc_bot_<?php echo $id_procedimento;?>.classList.add('fas','fa-chevron-up');
-                        
-                        
-
+                        proc<?php echo $id_detalhado;?>.style.display = 'block';
+                        proc_bot_<?php echo $id_detalhado;?>.classList.remove('fas','fa-chevron-down');
+                        proc_bot_<?php echo $id_detalhado;?>.classList.add('fas','fa-chevron-up');
+                                                
                     }else{
-                        proc<?php echo $id_procedimento;?>.style.display = 'none';
 
-                        proc_bot_<?php echo $id_procedimento;?>.classList.remove('fas','fa-chevron-up');
-                        proc_bot_<?php echo $id_procedimento;?>.classList.add('fas','fa-chevron-down');
-                       
+                        proc<?php echo $id_detalhado;?>.style.display = 'none';
+                        proc_bot_<?php echo $id_detalhado;?>.classList.remove('fas','fa-chevron-up');
+                        proc_bot_<?php echo $id_detalhado;?>.classList.add('fas','fa-chevron-down');
+                        
                     }
                 }
 
-                </script>
+            </script>
 
-                <?php 
+            <?php 
 
-                $id_procedimento = $id_procedimento + 1;
+                $id_detalhado = $id_detalhado + 1;                      
 
-            }
+            echo "</table>";
+
+            echo '</div>';  
+
+        echo '</div>';
             
         echo '</div>';
-
-        ?>
-
-        <script>
-
-            var proc<?php echo $id_paciente;?> = document.getElementById("<?php echo 'pac_' . $id_paciente;?>");
-            var pac_bot_<?php echo $id_paciente;?> = document.getElementById("<?php echo 'pac_bot_' . $id_paciente;?>");
-
-            proc<?php echo $id_paciente; ?>.style.display = 'none';
-
-            function mostrar_pac_<?php echo $id_paciente;?>(){
-                if(proc<?php echo $id_paciente;?>.style.display == 'none'){    
-                    proc<?php echo $id_paciente;?>.style.display = 'block';
-
-                    pac_bot_<?php echo $id_paciente;?>.classList.remove('fas','fa-chevron-down');
-                    pac_bot_<?php echo $id_paciente;?>.classList.add('fas','fa-chevron-up');
-
-                }else{
-                    proc<?php echo $id_paciente;?>.style.display = 'none';
-                    pac_bot_<?php echo $id_paciente;?>.classList.remove('fas','fa-chevron-up');
-                    pac_bot_<?php echo $id_paciente;?>.classList.add('fas','fa-chevron-down');
-
-                }
-            }
-
-        </script>
-        
-        <?php 
 
         $id_paciente = $id_paciente + 1;
 

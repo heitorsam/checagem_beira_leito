@@ -35,9 +35,7 @@
         	<div class="col-md-3 footer-social animated fadeInDown">
             	<h4>Outros Projetos</h4>
             	<ul>
-                	<li><a href="http://10.200.0.50:8080/medicamentos/">Portal Medicamentos</a></li>
-                	<li><a href="http://10.200.0.50:8080/guiasmed/">Portal Guias Médico</a></li>
-                	<li><a href="https://kpi.santacasasjc.com.br/">Portal KPI</a></li>
+                	<li><a target="_blank" href="http://10.200.0.50:8080/portfolio/">Conheça nosso portfólio</a></li>
                 </ul>
             </div>
         </div>

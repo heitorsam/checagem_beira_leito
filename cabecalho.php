@@ -69,8 +69,8 @@ session_start();
                         <i class="fa fa-bars" aria-hidden="true"></i> Menu</a></a>
                         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown06">
 
-                        <a class="dropdown-item" style="background-color: #f3f3f3;" href="javascript:void(0)" ><i class="fas fa-signature"></i> Assinaturas</a>
-                        <a class="dropdown-item" style="background-color: #ffffff;" href="gerar_documento.php" ><i class="fas fa-file-signature"></i> Gerar Documento</a>
+                        <a class="dropdown-item" style="background-color: #f3f3f3;" href="javascript:void(0)" ><i class="far fa-check-square"></i> Checagem Beira Leito</a>
+                        <a class="dropdown-item" style="background-color: #ffffff;" href="pendencias.php" ><i class="fas fa-tasks"></i> Pendências</a>
                                           
                         <?php if(@$_SESSION['sn_admin'] == 'S'){ ?>
                             <!--ADMINISTRADOR-->
