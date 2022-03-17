@@ -253,7 +253,10 @@
              echo '<div class="row justify-content-md-center" style="padding: 1px 1em 0 1em; border-radius: 3px !important;">';
                 echo '<div class="col-11" style="background-color: #6996EF !important; padding-top: 3px; padding-bottom: 3px;">';
                     echo '<b>'. $row_pac['CD_ATENDIMENTO'] . ' - ' . $row_pac['DS_LEITO'] . ' - ' . $row_pac['NM_PACIENTE'] . ' - PENDÊNCIAS: ' . $row_pac['QTD_PENDENCIA'] . ' ' .
-                    '<button type="button" class="btn btn-primary" style="padding: 0px 6px 0px 6px !important;" data-toggle="modal" data-target="#detalhejust'.$id_paciente.'">
+                    
+                    //BUTTON QUE VAI CHAMAR A MODAL COM AJAX
+                    '<button type="button" class="btn btn-primary" style="padding: 0px 6px 0px 6px !important;" data-toggle="modal" 
+                    data-target="#detalhepac" data-cdpac="'.$row_pac['CD_PACIENTE'].'">
                     <i class="fas fa-info-circle"></i></button>'. '</b>';
                     
                 echo '</div>';
@@ -265,11 +268,6 @@
             echo '</div>';
 
         echo '</div>';          
-
-        ///////////
-        // MODAL //
-        ///////////
-        include 'modal_info_pac.php';
 
             /////////////
             //DETALHADO//
@@ -420,6 +418,11 @@
 </div>
 
 <?php
+
+    ////////////////////////////
+    // MODAL DETALHE PACIENTE //
+    ////////////////////////////    
+    include 'modal_info_pac.php';
 
     include "rodape.php";
 
