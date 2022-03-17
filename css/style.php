@@ -376,31 +376,26 @@ p,li{
     color: #ffffff;
     background-color: #3185c1;
     vertical-align: bottom;
-    border: none;
-    border-bottom: 1px solid #dee2e6 !important;
-
+    border: none !important;
 }
+
 .table td, .table th {
     font-size: 14px;
     padding: 5px !important;
     vertical-align: top;
-    border-top: 1px solid #dee2e6;
+    border-top: none !important;
+    border-bottom: solid 1px #dee2e6;
 }
 
 tbody{
     vertical-align: top;
+    border: none !important;
 }
+
 
 /********/
 /*TABELA*/
 /********/
-
-th.rotated-text {
-    font-size: 0.75rem !important;
-    height: 120px;
-    white-space: nowrap;
-    padding: 0 !important;
-}
 
 th.rotated-text > div {
     transform:
@@ -416,7 +411,6 @@ th.rotated-text > div > span {
 .fonte_tabela_pequeno{
     font-size: 0.75rem !important;
     text-align: center;
-    border-bottom: solid 1px #999999;
 }
 
 .fundo_amarelo{

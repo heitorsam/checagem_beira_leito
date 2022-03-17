@@ -55,7 +55,7 @@
 $(document).ready(function(){
     $(document).on('shown.bs.modal','.modal', function (event) {
 
-         //DO EVENTS
+        //DO EVENTS
         var button = $(event.relatedTarget)
 
         var var_pac = button.data('cdpac')

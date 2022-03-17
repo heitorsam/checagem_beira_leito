@@ -245,89 +245,52 @@
 
         echo '<div class="row justify-content-md-center">';
 
-        echo '<div 
-              class="col-11" style="padding: 3px; border-radius: 3px; margin-top: 10px;
-              color: #ffffff; background-color: #6996EF !important;">';
-                                                        
- 
-             echo '<div class="row justify-content-md-center" style="padding: 1px 1em 0 1em; border-radius: 3px !important;">';
-                echo '<div class="col-11" style="background-color: #6996EF !important; padding-top: 3px; padding-bottom: 3px;">';
-                    echo '<b>'. $row_pac['CD_ATENDIMENTO'] . ' - ' . $row_pac['DS_LEITO'] . ' - ' . $row_pac['NM_PACIENTE'] . ' - PENDÊNCIAS: ' . $row_pac['QTD_PENDENCIA'] . ' ' .
-                    
-                    //BUTTON QUE VAI CHAMAR A MODAL COM AJAX
-                    '<button type="button" class="btn btn-primary" style="padding: 0px 6px 0px 6px !important;" data-toggle="modal" 
-                    data-target="#detalhepac" data-cdpac="'.$row_pac['CD_PACIENTE'].'">
-                    <i class="fas fa-info-circle"></i></button>'. '</b>';
-                    
-                echo '</div>';
+            echo '<div 
+                class="col-11" style="padding: 3px; border-radius: 3px; margin-top: 10px;
+                color: #ffffff; background-color: #6996EF !important;">';
 
-                echo '<div onclick="mostrar_pac_'. $id_paciente . '()" class="col-1" style="background-color: #6996EF !important; padding-top: 3px; padding-bottom: 3px;">';
-                    echo '<b> <i id="proc_bot_'.$id_detalhado.'" class="fas fa-chevron-down"></i> </b>';           
-                echo '</div>';
+                    echo '<div class="row justify-content-md-center" style="padding: 1px 1em 0 1em; border-radius: 3px !important;">';
+                        
+                        echo '<div class="col-11" style="background-color: #6996EF !important; padding-top: 3px; padding-bottom: 3px;">';
+                            
+                                echo '<b>'. $row_pac['CD_ATENDIMENTO'] . ' - ' . $row_pac['DS_LEITO'] . ' - ' . $row_pac['NM_PACIENTE'] . ' - PENDÊNCIAS: ' . $row_pac['QTD_PENDENCIA'] . ' ' .
+                            
+                                //BUTTON QUE VAI CHAMAR A MODAL COM AJAX
+                                '<button type="button" class="btn btn-primary" style="padding: 0px 6px 0px 6px !important;" data-toggle="modal" 
+                                data-target="#detalhepac" data-cdpac="'.$row_pac['CD_PACIENTE'].'">
+                                <i class="fas fa-info-circle"></i></button>'. '</b>';
+                                
+                        echo '</div>';
+
+                        echo '<div onclick="mostrar_pac_'. $id_paciente . '('.$row_pac['CD_PACIENTE'].','.$var_frm_setor .
+                        ')" class="col-1" style="background-color: #6996EF !important; padding-top: 3px; padding-bottom: 3px;">';
+                            echo '<b> <i id="proc_bot_'.$id_detalhado.'" class="fas fa-chevron-down"></i> </b>';           
+                    
+                        echo '</div>';
+
+                    echo '</div>';
 
             echo '</div>';
+         
 
-        echo '</div>';          
+        /////////////
+        //DETALHADO//
+        /////////////     
 
-            /////////////
-            //DETALHADO//
-            /////////////     
-
-            echo '<div id="detalhe_' . $id_detalhado . '"                      
+        echo '<div id="detalhe_' . $id_detalhado . '"                      
                 class="col-11" style=" margin: 0 auto; border-radius: 3px; margin-top: 22px;
                 border: solid 1px #6996EF;">';
 
-                    echo "<div class='table-responsive col-md-12'>
-                          <table class='table table-striped' cellspacing='0' cellpadding='0'>" . "<thead><tr>"; 
-                            
-                            echo "<th class='align-middle' style='text-align: center;'> Prescrição</th>
-                                  <th class='align-middle' style='text-align: center;'> Esquema</th>	
-                                  <th class='align-middle' style='text-align: center;'> Descrição</th>	
-                                  <th class='align-middle' style='text-align: center;'> Horário Medicação</th>";	
-        
-                        echo "</tr></thead>";	
-                        
-                        echo "<tbody id='det_pend" . $id_detalhado . "'>
-                        <tbody>";
+                    echo "<div id='det_pend_" . $id_detalhado . "'></div>";
 
-            ?>
+                        //CONSTRUTOR DA TABLE
+                        include 'construtor_det_pend.php';                   
 
-            <script>
+        echo '</div>';  
 
-                var proc<?php echo $id_detalhado;?> = document.getElementById("<?php echo 'detalhe_' . $id_detalhado;?>");
-                var proc_bot_<?php echo $id_detalhado;?> = document.getElementById("<?php echo 'proc_bot_' . $id_detalhado;?>");
+        echo '</div>';  
 
-                proc<?php echo $id_detalhado; ?>.style.display = 'none';
-
-                function mostrar_pac_<?php echo $id_paciente;?>(){
-                    if(proc<?php echo $id_detalhado;?>.style.display == 'none'){  
-
-                        proc<?php echo $id_detalhado;?>.style.display = 'block';
-                        proc_bot_<?php echo $id_detalhado;?>.classList.remove('fas','fa-chevron-down');
-                        proc_bot_<?php echo $id_detalhado;?>.classList.add('fas','fa-chevron-up');
-                                                
-                    }else{
-
-                        proc<?php echo $id_detalhado;?>.style.display = 'none';
-                        proc_bot_<?php echo $id_detalhado;?>.classList.remove('fas','fa-chevron-up');
-                        proc_bot_<?php echo $id_detalhado;?>.classList.add('fas','fa-chevron-down');
-                        
-                    }
-                }
-
-            </script>
-
-            <?php 
-
-                $id_detalhado = $id_detalhado + 1;                      
-
-            echo "</table>";
-
-            echo '</div>';  
-
-        echo '</div>';
-            
-        echo '</div>';
+        $id_detalhado = $id_detalhado + 1;  
 
         $id_paciente = $id_paciente + 1;
 
