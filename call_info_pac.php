@@ -8,7 +8,8 @@
 
     //Consulta no banco para trazer informações dos pacientes
 
-    $consulta_paci = "SELECT pac.NM_PACIENTE, NVL(pac.NR_CPF,0) AS NR_CPF, pac.DT_NASCIMENTO, pac.NM_MAE
+    $consulta_paci = "SELECT pac.NM_PACIENTE, NVL(pac.NR_CPF,0) AS NR_CPF, 
+                      TO_CHAR(pac.DT_NASCIMENTO,'DD/MM/YYYY') || ' ' AS DT_NASCIMENTO, pac.NM_MAE
                       FROM dbamv.PACIENTE pac
                       WHERE pac.CD_PACIENTE = '$var_pac'";
 

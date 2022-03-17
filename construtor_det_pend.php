@@ -25,11 +25,11 @@
                         //alert(var_set);  
 
                         //LIMPANDO DIV result caso exista
-                        //$('#result'). remove(); 
+                        $('#result<?php echo $id_detalhado;?>'). remove(); 
                         
                         //CRIADOR DA DIV
                         const result = document.createElement("table");
-                        result.id = 'result';
+                        result.id = 'result' + <?php echo $id_detalhado;?>;
 
                         //ADICIONANDO CLASSES
                         result.classList.add('table');
