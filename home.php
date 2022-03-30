@@ -20,7 +20,8 @@
             <a href="pendencias.php" class="botao_home" type="submit"><i class="fas fa-tasks"></i> Pendências </a></td></tr>
             
             <span class="espaco_pequeno"></span>
- 
+            
+            <a href="impressao.php" class="botao_home" type="submit"><i class="fas fa-list-ol"></i> Lista Impressão </a></td></tr>
 
         <?php if(@$_SESSION['sn_admin'] == 'S'){ ?>
 
