@@ -83,6 +83,7 @@ session_start();
                             <!--ADMINISTRADOR-->
                             <a class="dropdown-item" style="background-color: #f3f3f3;" href="javascript:void(0)" ><i class="fas fa-chart-line"></i> Administrador</a>
                             <a class="dropdown-item" style="background-color: #ffffff;" href="permissoes.php" ><i class="fas fa-cogs"></i> Permissões</a>
+                            <a class="dropdown-item" style="background-color: #ffffff;" href="impressao.php" ><i class="fas fa-list-ol"></i> Lista Impressão</a>
                         <?php } ?>
 
         <div class="div_br"> </div>
