@@ -52,6 +52,8 @@
                                   INNER JOIN dbamv.SETOR st
                                   ON st.CD_SETOR = unid.CD_SETOR
                                   WHERE mi.CD_ATENDIMENTO IS NOT NULL
+                                  AND mi.SN_RESERVA IS NULL
+                                  AND mi.HR_MOV_INT >= SYSDATE - 2
                                   AND st.CD_SETOR = $var_st) lt_set
                       ON lt_set.CD_ATENDIMENTO = atd.CD_ATENDIMENTO
                       AND hm.DH_MEDICACAO BETWEEN lt_set.DT_ENTRADA AND lt_set.DT_SAIDA
