@@ -78,7 +78,7 @@ session_start();
 
                         <a class="dropdown-item" style="background-color: #f3f3f3;" href="javascript:void(0)" ><i class="far fa-check-square"></i> Checagem Beira Leito</a>
                         <a class="dropdown-item" style="background-color: #ffffff;" href="pendencias.php" ><i class="fas fa-tasks"></i> Pendências</a>
-                        <a class="dropdown-item" style="background-color: #ffffff;" href="impressao.php" ><i class="fas fa-list-ol"></i> Lista Impressão</a>
+                        <!--<a class="dropdown-item" style="background-color: #ffffff;" href="impressao.php" ><i class="fas fa-list-ol"></i> Lista Impressão</a>-->
                                          
                         <?php if(@$_SESSION['sn_admin'] == 'S'){ ?>
                             <!--ADMINISTRADOR-->
