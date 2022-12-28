@@ -27,7 +27,7 @@
                   INNER JOIN dbamv.UNID_INT unid
                     ON unid.CD_SETOR = st.CD_SETOR
                   WHERE st.CD_SETOR = '$var_frm_setor'
-                
+               
                   UNION ALL
                 
                   SELECT res.*
@@ -37,6 +37,7 @@
                   INNER JOIN dbamv.UNID_INT unid
                     ON unid.CD_SETOR = st.CD_SETOR
                   WHERE st.CD_SETOR <> '$var_frm_setor'
+
                   ORDER BY st.NM_SETOR ASC) res";
     $result_setor = oci_parse($conn_ora, $cons_setor);
     @oci_execute($result_setor);
@@ -149,10 +150,14 @@ $consulta_tot = "SELECT lt_set.CD_SETOR, lt_set.NM_SETOR,
  AND hm.DH_MEDICACAO >= SYSDATE-1
  AND itpm.DH_CANCELADO IS NULL
  AND hm.CD_ITPRE_MED  || TO_CHAR(hm.DH_MEDICACAO,'DD/MM/YYYY HH24:MI:SS')
-                   NOT IN (SELECT cons.CD_ITPRE_MED || TO_CHAR(cons.DH_MEDICACAO,'DD/MM/YYYY HH24:MI:SS')
-                           FROM dbamv.HRITPRE_CONS cons
-                           WHERE cons.SN_SUSPENSO = 'S'
-                           AND TRUNC(cons.DH_CHECAGEM) >= TRUNC(SYSDATE-2))
+NOT IN (SELECT cons.CD_ITPRE_MED || TO_CHAR(cons.DH_MEDICACAO,'DD/MM/YYYY HH24:MI:SS')
+        FROM dbamv.HRITPRE_CONS cons
+        WHERE cons.SN_SUSPENSO = 'S'
+        AND TRUNC(cons.DH_CHECAGEM) >= TRUNC(SYSDATE-2))
+AND hm.CD_ITPRE_MED  || TO_CHAR(hm.DH_MEDICACAO,'DD/MM/YYYY HH24:MI:SS')
+NOT IN (SELECT cons.CD_ITPRE_MED || TO_CHAR(cons.DH_MEDICACAO,'DD/MM/YYYY HH24:MI:SS')
+        FROM dbamv.HRITPRE_CONS cons
+        WHERE TRUNC(cons.DH_CHECAGEM) >= TRUNC(SYSDATE-2))
 GROUP BY
     lt_set.CD_SETOR, lt_set.NM_SETOR";
 
@@ -240,10 +245,14 @@ GROUP BY
  AND hm.DH_MEDICACAO >= SYSDATE-1
  AND itpm.DH_CANCELADO IS NULL
  AND hm.CD_ITPRE_MED  || TO_CHAR(hm.DH_MEDICACAO,'DD/MM/YYYY HH24:MI:SS')
-                   NOT IN (SELECT cons.CD_ITPRE_MED || TO_CHAR(cons.DH_MEDICACAO,'DD/MM/YYYY HH24:MI:SS')
-                           FROM dbamv.HRITPRE_CONS cons
-                           WHERE cons.SN_SUSPENSO = 'S'
-                           AND TRUNC(cons.DH_CHECAGEM) >= TRUNC(SYSDATE-2))
+NOT IN (SELECT cons.CD_ITPRE_MED || TO_CHAR(cons.DH_MEDICACAO,'DD/MM/YYYY HH24:MI:SS')
+        FROM dbamv.HRITPRE_CONS cons
+        WHERE cons.SN_SUSPENSO = 'S'
+        AND TRUNC(cons.DH_CHECAGEM) >= TRUNC(SYSDATE-2))
+AND hm.CD_ITPRE_MED  || TO_CHAR(hm.DH_MEDICACAO,'DD/MM/YYYY HH24:MI:SS')
+NOT IN (SELECT cons.CD_ITPRE_MED || TO_CHAR(cons.DH_MEDICACAO,'DD/MM/YYYY HH24:MI:SS')
+    FROM dbamv.HRITPRE_CONS cons
+    WHERE TRUNC(cons.DH_CHECAGEM) >= TRUNC(SYSDATE-2))
                            GROUP BY  
                            lt_set.CD_SETOR, lt_set.NM_SETOR,
                            atd.CD_ATENDIMENTO, lt_set.DS_LEITO, atd.CD_PACIENTE, pac.NM_PACIENTE, pac.DT_NASCIMENTO, pac.NM_MAE";

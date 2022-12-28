@@ -78,7 +78,11 @@
                                               FROM dbamv.HRITPRE_CONS cons
                                               WHERE cons.SN_SUSPENSO = 'S'
                                               AND TRUNC(cons.DH_CHECAGEM) >= TRUNC(SYSDATE-2))
-                      AND itpm.DH_CANCELADO IS NULL
+                                            
+                      AND hm.CD_ITPRE_MED  || TO_CHAR(hm.DH_MEDICACAO,'DD/MM/YYYY HH24:MI:SS')
+                      NOT IN (SELECT cons.CD_ITPRE_MED || TO_CHAR(cons.DH_MEDICACAO,'DD/MM/YYYY HH24:MI:SS')
+                              FROM dbamv.HRITPRE_CONS cons
+                              WHERE TRUNC(cons.DH_CHECAGEM) >= TRUNC(SYSDATE-2))
                       ORDER BY hm.DH_MEDICACAO ASC";
 
     $result_paci  = oci_parse($conn_ora, $consulta_paci);
@@ -88,7 +92,7 @@
     while($row_paci = oci_fetch_array($result_paci)){       
 
         $info_user[] = array(
-            'res_prescricao' => $row_paci['CD_ITPRE_MED'],
+            'res_prescricao' => $row_paci['CD_PRE_MED'],
             'res_esquema' => $row_paci['DS_TIP_ESQ'],
             'res_descricao' => $row_paci['DS_TIP_PRESC'],
             'res_dh_medicacao' => $row_paci['DH_MEDICACAO']
